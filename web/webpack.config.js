@@ -4,7 +4,6 @@ const fs = require('fs');
 const merge = require('webpack-merge');
 const baseConfig = require('../webpack.base.config.js');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const WriteFilePlugin = require('write-file-webpack-plugin');
 const { DefinePlugin, ProvidePlugin } = require('webpack');
 const SentryWebpackPlugin = require('@sentry/webpack-plugin');
 const { getJsBundleId } = require('./bundle-id.js');
@@ -76,7 +75,6 @@ if (fs.existsSync(ROBOTS_TXT_PATH)) {
 }
 
 let plugins = [
-  new WriteFilePlugin(),
   new CopyWebpackPlugin(copyWebpackCommands),
   new DefinePlugin({
     IS_WEB: JSON.stringify(true),

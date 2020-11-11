@@ -18,12 +18,13 @@ let baseConfig = {
   },
   devServer: {
     historyApiFallback: true,
+    writeToDisk: true,
   },
   module: {
     rules: [
       {
         test: /\.jsx?$/,
-        exclude: /node_modules/,
+        // exclude: /node_modules/,
         use: [
           { loader: 'cache-loader' },
           { loader: 'thread-loader' },
