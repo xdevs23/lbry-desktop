@@ -13,14 +13,6 @@ const STATIC_ROOT = path.resolve(__dirname, 'static/');
 let baseConfig = {
   mode: ifProduction('production', 'development'),
   devtool: ifProduction('source-map', 'eval-cheap-module-source-map'),
-  optimization: {
-    minimizer: [
-      new TerserPlugin({
-        parallel: true,
-        sourceMap: true,
-      }),
-    ],
-  },
   node: {
     __dirname: false,
   },
@@ -31,25 +23,35 @@ let baseConfig = {
     rules: [
       {
         test: /\.jsx?$/,
-        loader: 'babel-loader',
-        options: {
-          plugins: ['@babel/plugin-syntax-dynamic-import'],
-        },
+        exclude: /node_modules/,
+        use: [
+          { loader: 'cache-loader' },
+          { loader: 'thread-loader' },
+          {
+            loader: 'babel-loader',
+            options: {
+              compact: true,
+              presets: ['@babel/env', '@babel/react', '@babel/flow'],
+              plugins: ['@babel/plugin-proposal-object-rest-spread', '@babel/plugin-proposal-class-properties'],
+            },
+          },
+        ],
       },
       {
         test: /\.s?css$/,
         use: [
-		{ loader: 'style-loader' },
-		{ loader: 'css-loader' },
-		{ loader: 'postcss-loader',
-		  options: {
-		    plugins: function () {
-		      return [ require( 'postcss-rtl' )() ]
-		    }
-		  }
-		},
-		{ loader: 'sass-loader'},
-	      ],
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          {
+            loader: 'postcss-loader',
+            options: {
+              plugins: function() {
+                return [require('postcss-rtl')()];
+              },
+            },
+          },
+          { loader: 'sass-loader' },
+        ],
       },
       {
         test: /\.(png|svg|gif)$/,
@@ -76,7 +78,10 @@ let baseConfig = {
     alias: {
       config: path.resolve(__dirname, 'config.js'),
       homepage: 'util/homepage.js',
-      homepages: process.env.CUSTOM_HOMEPAGE === 'true' ? path.resolve(__dirname, 'custom/homepages/index.js') : ('homepages/index.js'),
+      homepages:
+        process.env.CUSTOM_HOMEPAGE === 'true'
+          ? path.resolve(__dirname, 'custom/homepages/index.js')
+          : 'homepages/index.js',
       lbryinc: 'lbryinc/dist/bundle.es.js',
       // Build optimizations for 'redux-persist-transform-filter'
       'redux-persist-transform-filter': 'redux-persist-transform-filter/index.js',
@@ -88,6 +93,14 @@ let baseConfig = {
       'lodash.forin': 'lodash-es/forIn',
       'lodash.clonedeep': 'lodash-es/cloneDeep',
       ...ifProduction({}, { 'react-dom': '@hot-loader/react-dom' }),
+    },
+    fallback: {
+      crypto: require.resolve('crypto-browserify'),
+      https: require.resolve('https-browserify'),
+      os: require.resolve('os-browserify/browser'),
+      path: require.resolve('path-browserify'),
+      stream: require.resolve('stream-browserify'),
+      http: require.resolve('stream-http'),
     },
     symlinks: false,
   },
@@ -110,4 +123,16 @@ let baseConfig = {
     }),
   ],
 };
+
+if (NODE_ENV === 'production') {
+  baseConfig.optimization = {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        test: /\.js(\?.*)?$/i,
+      }),
+    ],
+  };
+}
+
 module.exports = baseConfig;

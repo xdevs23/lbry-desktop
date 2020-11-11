@@ -104,6 +104,7 @@ const webConfig = {
     [`ui-${jsBundleId}`]: '../ui/index.jsx',
   },
   output: {
+    pathinfo: false,
     filename: '[name].js',
     path: path.join(__dirname, 'dist/public/'),
     publicPath: '/public/',
@@ -114,14 +115,15 @@ const webConfig = {
   },
   module: {
     rules: [
-      {
-        loader: 'babel-loader',
-        test: /\.jsx?$/,
-        options: {
-          presets: ['@babel/env', '@babel/react', '@babel/flow'],
-          plugins: ['@babel/plugin-proposal-object-rest-spread', '@babel/plugin-proposal-class-properties'],
-        },
-      },
+      //   {
+      //     loader: 'babel-loader',
+      //     test: /\.jsx?$/,
+      //     options: {
+      //       compact: true,
+      //       presets: ['@babel/env', '@babel/react', '@babel/flow'],
+      //       plugins: ['@babel/plugin-proposal-object-rest-spread', '@babel/plugin-proposal-class-properties'],
+      //     },
+      //   },
       {
         loader: 'preprocess-loader',
         test: /\.jsx?$/,
