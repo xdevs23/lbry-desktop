@@ -43,13 +43,28 @@ const copyWebpackCommands = [
     force: true,
   },
   {
-    from: `${STATIC_ROOT}/img/favicon.png`,
-    to: `${DIST_ROOT}/public/favicon.png`,
-    force: true,
+    from: `${STATIC_ROOT}/img/hello-icon-128.png`,
+    to: `${DIST_ROOT}/public/hello-icon-128.png`,
   },
   {
-    from: `${STATIC_ROOT}/img/v2-og.png`,
-    to: `${DIST_ROOT}/public/v2-og.png`,
+    from: `${STATIC_ROOT}/img/hello-icon-144.png`,
+    to: `${DIST_ROOT}/public/hello-icon-144.png`,
+  },
+  {
+    from: `${STATIC_ROOT}/img/hello-icon-152.png`,
+    to: `${DIST_ROOT}/public/hello-icon-152.png`,
+  },
+  {
+    from: `${STATIC_ROOT}/img/hello-icon-192.png`,
+    to: `${DIST_ROOT}/public/hello-icon-192.png`,
+  },
+  {
+    from: `${STATIC_ROOT}/img/hello-icon-256.png`,
+    to: `${DIST_ROOT}/public/hello-icon-256.png`,
+  },
+  {
+    from: `${STATIC_ROOT}/img/hello-icon-512.png`,
+    to: `${DIST_ROOT}/public/hello-icon-512.png`,
   },
   {
     from: `${STATIC_ROOT}/font/`,
