@@ -80,17 +80,15 @@ function VideoViewer(props: Props) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showAutoplayCountdown, setShowAutoplayCountdown] = useState(false);
   const [isEndededEmbed, setIsEndededEmbed] = useState(false);
+  const previousUri = usePrevious(uri);
+  const embedded = useContext(EmbedContext);
   const [adUrl, setAdUrl] = useState();
-
   const adsEnabled = !authenticated && !embedded;
   const [ready, setReady] = useState(!adsEnabled);
 
   /* isLoading was designed to show loading screen on first play press, rather than completely black screen, but
   breaks because some browsers (e.g. Firefox) block autoplay but leave the player.play Promise pending */
   const [isLoading, setIsLoading] = useState(false);
-
-  const previousUri = usePrevious(uri);
-  const embedded = useContext(EmbedContext);
 
   // force everything to recent when URI changes, can cause weird corner cases otherwise (e.g. navigate while autoplay is true)
   useEffect(() => {
@@ -223,12 +221,12 @@ function VideoViewer(props: Props) {
             adsReturned = true;
           }
 
-          if (adsEnabled) {
+          if ('adsEnabled') {
             // Let this line error if res.ads is empty
             // I took this from an example response from Dailymotion
             // It will be caught below and sent to matomo to figure out if there if this needs to be something changed to deal with unrulys data
             const adUrl = res.ads[0].creatives[0].mediaFiles[0].fileURL;
-            console.log('adUrl', adUrl);
+            console.log('ad url from xml response', adUrl);
             // debugger;
             if (adUrl) {
               setAdUrl(adUrl);
