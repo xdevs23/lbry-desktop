@@ -9,7 +9,6 @@ import eventTracking from 'videojs-event-tracking';
 import * as OVERLAY from './overlays';
 import './plugins/videojs-mobile-ui/plugin';
 import isUserTyping from 'util/detect-typing';
-import './ads.js';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -166,12 +165,7 @@ export default React.memo<Props>(function VideoJs(props: Props) {
   if (adUrl) {
     // Add the adUrl to the first entry in `sources`
     // After the ad is finished, it will be removed as a prop to this component
-    // videoJsOptions.sources.unshift({ src: adUrl, type: 'video/mp4' });
-    videoJsOptions.plugins.vastClient = {
-      adTagUrl: 'https://serve.adspruce.com/vpaid-8394-3.xml',
-      adsCancelTimeout: 5000,
-      adsEnabled: true,
-    };
+    videoJsOptions.sources.unshift({ src: adUrl, type: 'video/mp4' });
   }
 
   const tapToUnmuteRef = useRef();
