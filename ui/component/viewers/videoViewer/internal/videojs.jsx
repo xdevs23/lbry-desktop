@@ -9,6 +9,7 @@ import eventTracking from 'videojs-event-tracking';
 import * as OVERLAY from './overlays';
 import './plugins/videojs-mobile-ui/plugin';
 import isUserTyping from 'util/detect-typing';
+import './ads.js';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -43,6 +44,7 @@ type Props = {
   onPlayerReady: Player => void,
   isAudio: boolean,
   startMuted: boolean,
+  adUrl: ?string,
 };
 
 type VideoJSOptions = {
@@ -139,7 +141,7 @@ class LbryVolumeBarClass extends videojs.getComponent(VIDEOJS_VOLUME_BAR_CLASS) 
 properties for this component should be kept to ONLY those that if changed should REQUIRE an entirely new videojs element
  */
 export default React.memo<Props>(function VideoJs(props: Props) {
-  const { startMuted, source, sourceType, poster, isAudio, onPlayerReady } = props;
+  const { startMuted, source, sourceType, poster, isAudio, onPlayerReady, adUrl } = props;
   const [reload, setReload] = useState('initial');
 
   let player: ?Player;
@@ -152,6 +154,7 @@ export default React.memo<Props>(function VideoJs(props: Props) {
         type: sourceType,
       },
     ],
+    muted: adUrl ? false : startMuted,
     autoplay: false,
     poster: poster, // thumb looks bad in app, and if autoplay, flashing poster is annoying
     plugins: {
@@ -160,7 +163,16 @@ export default React.memo<Props>(function VideoJs(props: Props) {
     },
   };
 
-  videoJsOptions.muted = startMuted;
+  if (adUrl) {
+    // Add the adUrl to the first entry in `sources`
+    // After the ad is finished, it will be removed as a prop to this component
+    // videoJsOptions.sources.unshift({ src: adUrl, type: 'video/mp4' });
+    videoJsOptions.plugins.vastClient = {
+      adTagUrl: 'https://serve.adspruce.com/vpaid-8394-3.xml',
+      adsCancelTimeout: 5000,
+      adsEnabled: true,
+    };
+  }
 
   const tapToUnmuteRef = useRef();
   const tapToRetryRef = useRef();
@@ -240,9 +252,11 @@ export default React.memo<Props>(function VideoJs(props: Props) {
     }
   }
 
-  function onEnded() {
-    showTapButton(TAP.NONE);
-  }
+  const onEnded = React.useCallback(() => {
+    if (!adUrl) {
+      showTapButton(TAP.NONE);
+    }
+  }, [adUrl]);
 
   function handleKeyDown(e: KeyboardEvent) {
     const videoNode: ?HTMLVideoElement = containerRef.current && containerRef.current.querySelector('video, audio');

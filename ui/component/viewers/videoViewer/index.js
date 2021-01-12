@@ -2,6 +2,7 @@ import { connect } from 'react-redux';
 import { makeSelectClaimForUri, makeSelectFileInfoForUri, makeSelectThumbnailForUri, SETTINGS } from 'lbry-redux';
 import { doChangeVolume, doChangeMute, doAnalyticsView, doAnalyticsBuffer } from 'redux/actions/app';
 import { selectVolume, selectMute } from 'redux/selectors/app';
+import { selectUserVerifiedEmail } from 'redux/selectors/user';
 import { savePosition, clearPosition } from 'redux/actions/content';
 import { makeSelectContentPositionForUri } from 'redux/selectors/content';
 import VideoViewer from './view';
@@ -25,6 +26,7 @@ const select = (state, props) => {
     hasFileInfo: Boolean(makeSelectFileInfoForUri(props.uri)(state)),
     thumbnail: makeSelectThumbnailForUri(props.uri)(state),
     claim: makeSelectClaimForUri(props.uri)(state),
+    isAuthenticated: selectUserVerifiedEmail(state),
   };
 };
 

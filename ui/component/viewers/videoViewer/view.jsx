@@ -1,4 +1,6 @@
 // @flow
+import * as PAGES from 'constants/pages';
+import * as ICONS from 'constants/icons';
 import React, { useEffect, useState, useContext, useCallback } from 'react';
 import { stopContextMenu } from 'util/context-menu';
 import type { Player } from './internal/videojs';
@@ -13,8 +15,16 @@ import FileViewerEmbeddedEnded from 'web/component/fileViewerEmbeddedEnded';
 import FileViewerEmbeddedTitle from 'component/fileViewerEmbeddedTitle';
 import LoadingScreen from 'component/common/loading-screen';
 import { addTheaterModeButton } from './internal/theater-mode';
+import { VASTClient } from 'vast-client';
+import Button from 'component/button';
+import I18nMessage from 'component/i18nMessage';
+import { useHistory } from 'react-router';
 
 const PLAY_TIMEOUT_ERROR = 'play_timeout_error';
+
+// Ignores any call made 1 minutes or less after the last successful ad
+const ADS_CAP_LEVEL = 1 * 60 * 1000;
+const vastClient = new VASTClient(0, ADS_CAP_LEVEL);
 
 type Props = {
   position: number,
@@ -38,11 +48,6 @@ type Props = {
   toggleVideoTheaterMode: () => void,
 };
 
-/*
-codesandbox of idealized/clean videojs and react 16+
-https://codesandbox.io/s/71z2lm4ko6
- */
-
 function VideoViewer(props: Props) {
   const {
     contentType,
@@ -64,13 +69,21 @@ function VideoViewer(props: Props) {
     clearPosition,
     desktopPlayStartTime,
     toggleVideoTheaterMode,
+    authenticated,
   } = props;
   const claimId = claim && claim.claim_id;
   const isAudio = contentType.includes('audio');
   const forcePlayer = FORCE_CONTENT_TYPE_PLAYER.includes(contentType);
+  const {
+    location: { pathname },
+  } = useHistory();
   const [isPlaying, setIsPlaying] = useState(false);
   const [showAutoplayCountdown, setShowAutoplayCountdown] = useState(false);
   const [isEndededEmbed, setIsEndededEmbed] = useState(false);
+  const [adUrl, setAdUrl] = useState();
+
+  const adsEnabled = !authenticated && !embedded;
+  const [ready, setReady] = useState(!adsEnabled);
 
   /* isLoading was designed to show loading screen on first play press, rather than completely black screen, but
   breaks because some browsers (e.g. Firefox) block autoplay but leave the player.play Promise pending */
@@ -109,13 +122,13 @@ function VideoViewer(props: Props) {
     });
   }
 
-  function onEnded() {
+  const onEnded = React.useCallback(() => {
     if (embedded) {
       setIsEndededEmbed(true);
     } else if (autoplaySetting) {
       setShowAutoplayCountdown(true);
     }
-  }
+  }, [embedded, setIsEndededEmbed, autoplaySetting, setShowAutoplayCountdown, adUrl, setAdUrl]);
 
   function onPlay() {
     setIsLoading(false);
@@ -196,6 +209,46 @@ function VideoViewer(props: Props) {
     IS_WEB ? [uri] : [uri, desktopPlayStartTime]
   );
 
+  React.useEffect(() => {
+    if ('adsEnabled') {
+      analytics.adsFetchedEvent();
+      const url = `https://serve.adspruce.com/vpaid-8394-3.xml`;
+
+      let adsReturned = false;
+      vastClient
+        .get(url)
+        .then(res => {
+          if (res.ads.length > 0) {
+            analytics.adsReceivedEvent(res);
+            adsReturned = true;
+          }
+
+          if (adsEnabled) {
+            // Let this line error if res.ads is empty
+            // I took this from an example response from Dailymotion
+            // It will be caught below and sent to matomo to figure out if there if this needs to be something changed to deal with unrulys data
+            const adUrl = res.ads[0].creatives[0].mediaFiles[0].fileURL;
+            console.log('adUrl', adUrl);
+            // debugger;
+            if (adUrl) {
+              setAdUrl(adUrl);
+            }
+
+            setReady(true);
+          }
+        })
+        .catch(e => {
+          setReady(true);
+
+          if (adsEnabled) {
+            if (adsReturned) {
+              analytics.adsErrorEvent(e);
+            }
+          }
+        });
+    }
+  }, [uri, adsEnabled, setAdUrl]);
+
   return (
     <div
       className={classnames('file-viewer', {
@@ -209,14 +262,48 @@ function VideoViewer(props: Props) {
       {embedded && !isEndededEmbed && <FileViewerEmbeddedTitle uri={uri} />}
       {/* disable this loading behavior because it breaks when player.play() promise hangs */}
       {isLoading && <LoadingScreen status={__('Loading')} />}
-      <VideoJs
-        source={source}
-        isAudio={isAudio}
-        poster={isAudio || (embedded && !autoplayIfEmbedded) ? thumbnail : null}
-        sourceType={forcePlayer ? 'video/mp4' : contentType}
-        onPlayerReady={onPlayerReady}
-        startMuted={autoplayIfEmbedded}
-      />
+
+      {ready && adUrl && (
+        <>
+          <span className="ads__video-notify">
+            {__('Advertisement')}{' '}
+            <Button
+              className="ads__video-close"
+              icon={ICONS.REMOVE}
+              title={__('Close')}
+              onClick={() => setAdUrl(null)}
+            />
+          </span>
+          <span className="ads__video-nudge">
+            <I18nMessage
+              tokens={{
+                sign_up: (
+                  <Button
+                    button="secondary"
+                    className="ads__video-link"
+                    label={__('Sign Up')}
+                    navigate={`/$/${PAGES.AUTH}?redirect=${pathname}&src=video-ad`}
+                  />
+                ),
+              }}
+            >
+              %sign_up% to turn ads off. This video will keep playing.
+            </I18nMessage>
+          </span>
+        </>
+      )}
+
+      {ready && (
+        <VideoJs
+          adUrl={adUrl}
+          source={source}
+          isAudio={isAudio}
+          poster={isAudio || (embedded && !autoplayIfEmbedded) ? thumbnail : null}
+          sourceType={forcePlayer ? 'video/mp4' : contentType}
+          onPlayerReady={onPlayerReady}
+          startMuted={autoplayIfEmbedded}
+        />
+      )}
     </div>
   );
 }
