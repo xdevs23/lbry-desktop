@@ -7,7 +7,7 @@ import React from 'react';
 import Page from 'component/page';
 import Button from 'component/button';
 import ClaimTilesDiscover from 'component/claimTilesDiscover';
-import getHomepage from 'homepage';
+// import getHomepage from 'homepage';
 import Icon from 'component/common/icon';
 
 type Props = {
@@ -23,19 +23,19 @@ function HomePage(props: Props) {
   const showPersonalizedTags = (authenticated || !IS_WEB) && followedTags && followedTags.length > 0;
   const showIndividualTags = showPersonalizedTags && followedTags.length < 5;
 
-  const rowData: Array<RowDataItem> = getHomepage(
-    authenticated,
-    showPersonalizedChannels,
-    showPersonalizedTags,
-    subscribedChannels,
-    followedTags,
-    showIndividualTags,
-    showNsfw
-  );
+  //   const rowData: Array<RowDataItem> = getHomepage(
+  //     authenticated,
+  //     showPersonalizedChannels,
+  //     showPersonalizedTags,
+  //     subscribedChannels,
+  //     followedTags,
+  //     showIndividualTags,
+  //     showNsfw
+  //   );
 
   return (
     <Page fullWidthPage>
-      {(authenticated || !IS_WEB) && !subscribedChannels.length && (
+      {/* {(authenticated || !IS_WEB) && !subscribedChannels.length && (
         <div className="notice-message">
           <h1 className="section__title">
             {__("%SITE_NAME% is more fun if you're following channels", { SITE_NAME })}
@@ -70,7 +70,7 @@ function HomePage(props: Props) {
             />
           )}
         </div>
-      ))}
+      ))} */}
     </Page>
   );
 }

@@ -1,7 +1,7 @@
 // @flow
-import type { RowDataItem } from 'homepage';
+// import type { RowDataItem } from 'homepage';
 import * as PAGES from 'constants/pages';
-import * as SIDEBAR_ROUTES from 'homepage';
+// import * as SIDEBAR_ROUTES from 'homepage';
 import React, { useEffect } from 'react';
 import { Route, Redirect, Switch, withRouter } from 'react-router-dom';
 import SettingsPage from 'page/settings';
@@ -55,9 +55,10 @@ import { LINKED_COMMENT_QUERY_PARAM } from 'constants/comment';
 import { parseURI, isURIValid } from 'lbry-redux';
 import { SITE_TITLE, WELCOME_VERSION } from 'config';
 
-const dynamicRoutes = Object.values(SIDEBAR_ROUTES).filter(
-  (potentialRoute: any) => potentialRoute && potentialRoute.route
-);
+const dynamicRoutes = [];
+// Object.values(SIDEBAR_ROUTES).filter(
+//   (potentialRoute: any) => potentialRoute && potentialRoute.route
+// );
 
 // Tell the browser we are handling scroll restoration
 if ('scrollRestoration' in history) {
@@ -207,13 +208,13 @@ function AppRouter(props: Props) {
       <Route path={`/`} exact component={HomePage} />
       <Route path={`/$/${PAGES.DISCOVER}`} exact component={DiscoverPage} />
       {/* $FlowFixMe */}
-      {dynamicRoutes.map((dynamicRouteProps: RowDataItem) => (
+      {/* {dynamicRoutes.map((dynamicRouteProps: RowDataItem) => (
         <Route
           key={dynamicRouteProps.route}
           path={dynamicRouteProps.route}
           component={routerProps => <DiscoverPage {...routerProps} dynamicRouteProps={dynamicRouteProps} />}
         />
-      ))}
+      ))} */}
 
       <Route path={`/$/${PAGES.AUTH_SIGNIN}`} exact component={SignInPage} />
       <Route path={`/$/${PAGES.AUTH_PASSWORD_RESET}`} exact component={PasswordResetPage} />
