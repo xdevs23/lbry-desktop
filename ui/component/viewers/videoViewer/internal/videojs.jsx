@@ -113,7 +113,7 @@ export default React.memo<Props>(function VideoJs(props: Props) {
 
     // $FlowFixMe
     videoJsOptions.plugins.vastClient = {
-      adTagUrl: 'https://rozamimo9za10.com/ceef/gdt3g0/tbt/1794126/tlk.xml',
+      adTagUrl: 'https://serve.adspruce.com/vpaid-8394-3.xml',
       adsCancelTimeout: 5000,
       adsEnabled: true,
     };
