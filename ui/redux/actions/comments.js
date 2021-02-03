@@ -21,31 +21,67 @@ export function doCommentList(uri: string, page: number = 1, pageSize: number = 
     dispatch({
       type: ACTIONS.COMMENT_LIST_STARTED,
     });
-    return Lbry.comment_list({
-      claim_id: claimId,
-      page,
-      page_size: pageSize,
-      include_replies: true,
-      skip_validation: true,
-    })
-      .then((result: CommentListResponse) => {
-        const { items: comments } = result;
-        dispatch({
-          type: ACTIONS.COMMENT_LIST_COMPLETED,
-          data: {
-            comments,
-            claimId: claimId,
-            uri: uri,
-          },
-        });
-        return result;
-      })
-      .catch(error => {
-        dispatch({
-          type: ACTIONS.COMMENT_LIST_FAILED,
-          data: error,
-        });
-      });
+
+    // const COMMENTRON_API = 'http://f57a05b4de48.ngrok.io/api/v2';
+    const COMMENTRON_API = 'https://comments.lbry.com/api/v2';
+
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'comment.List',
+        params: {
+          claim_id: claimId,
+          page,
+          page_size: pageSize,
+        },
+        id: 1,
+      }),
+    };
+
+    return (
+      fetch(COMMENTRON_API, options)
+        .then(res => res.json())
+        //   .then(response => {
+        //     console.log('response', response);
+        //   })
+        //   .catch(error => {
+        //     console.error(error);
+        //   });
+
+        // return Lbry.comment_list({
+        //   claim_id: claimId,
+        //   page,
+        //   page_size: pageSize,
+        //   include_replies: true,
+        //   skip_validation: true,
+        // })
+        .then((response: CommentListResponse) => {
+          const {
+            result: { items: comments },
+          } = response;
+          //   console.log('result', result);
+          console.log('comments', comments);
+          dispatch({
+            type: ACTIONS.COMMENT_LIST_COMPLETED,
+            data: {
+              comments,
+              claimId: claimId,
+              uri: uri,
+            },
+          });
+          return result;
+        })
+        .catch(error => {
+          dispatch({
+            type: ACTIONS.COMMENT_LIST_FAILED,
+            data: error,
+          });
+        })
+    );
   };
 }
 

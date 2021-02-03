@@ -64,6 +64,7 @@ function Comment(props: Props) {
     closeInlinePlayer,
     uri,
     author,
+    authorChannelId,
     authorUri,
     timePosted,
     message,
@@ -89,6 +90,8 @@ function Comment(props: Props) {
     othersReacts,
     commentIdentityChannel,
     contentChannel,
+    sigData,
+    handleNewBlock,
   } = props;
   const {
     push,
@@ -261,6 +264,9 @@ function Comment(props: Props) {
                       <Icon aria-hidden icon={ICONS.NO} />
                       {__('Block Channel')}
                     </MenuItem>
+                  )}
+                  {sigData && (
+                    <MenuItem onSelect={() => handleNewBlock(author, authorChannelId)}>New Block Function</MenuItem>
                   )}
                   {commentIdentityChannel === contentChannel && isTopLevel && (
                     <MenuItem

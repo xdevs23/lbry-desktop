@@ -160,17 +160,17 @@ export default function GetHomePageRowData(
       releaseTime:
         subscribedChannels.length > 20
           ? `>${Math.floor(
-          moment()
-            .subtract(6, 'months')
-            .startOf('week')
-            .unix()
-          )}`
+              moment()
+                .subtract(6, 'months')
+                .startOf('week')
+                .unix()
+            )}`
           : `>${Math.floor(
-          moment()
-            .subtract(1, 'year')
-            .startOf('week')
-            .unix()
-          )}`,
+              moment()
+                .subtract(1, 'year')
+                .startOf('week')
+                .unix()
+            )}`,
       pageSize: getPageSize(subscribedChannels.length > 3 ? (subscribedChannels.length > 6 ? 16 : 8) : 4),
       channelIds: subscribedChannels.map((subscription: Subscription) => {
         const { channelClaimId } = parseURI(subscription.uri);

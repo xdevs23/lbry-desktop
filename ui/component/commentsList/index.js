@@ -1,5 +1,10 @@
 import { connect } from 'react-redux';
-import { makeSelectClaimIsMine, selectFetchingMyChannels, selectMyChannelClaims } from 'lbry-redux';
+import {
+  makeSelectClaimIsMine,
+  selectFetchingMyChannels,
+  selectMyChannelClaims,
+  makeSelectChannelForClaimUri,
+} from 'lbry-redux';
 import {
   makeSelectTopLevelCommentsForUri,
   selectIsFetchingComments,
@@ -21,6 +26,7 @@ const select = (state, props) => ({
   fetchingChannels: selectFetchingMyChannels(state),
   reactionsById: selectOthersReactsById(state),
   activeChannel: selectCommentChannel(state),
+  channelClaimForUri: makeSelectChannelForClaimUri(props.uri)(state),
 });
 
 const perform = dispatch => ({

@@ -1,6 +1,7 @@
 // @flow
 import * as REACTION_TYPES from 'constants/reactions';
 import * as ICONS from 'constants/icons';
+import { Lbry } from 'lbry-redux';
 import { SORT_COMMENTS_NEW, SORT_COMMENTS_BEST, SORT_COMMENTS_CONTROVERSIAL } from 'constants/comment';
 import React, { useEffect } from 'react';
 import classnames from 'classnames';
@@ -13,6 +14,7 @@ import usePersistedState from 'effects/use-persisted-state';
 import { ENABLE_COMMENT_REACTIONS } from 'config';
 import { sortComments } from 'util/comments';
 import Empty from 'component/common/empty';
+import { v4 as uuid } from 'uuid';
 
 type Props = {
   comments: Array<Comment>,
@@ -43,7 +45,10 @@ function CommentList(props: Props) {
     fetchingChannels,
     reactionsById,
     activeChannel,
+    channelClaimForUri,
   } = props;
+
+  const [sigData, setSigData] = React.useState();
   const commentRef = React.useRef();
   const spinnerRef = React.useRef();
   const [sort, setSort] = usePersistedState(
@@ -58,6 +63,14 @@ function CommentList(props: Props) {
   const [readyToDisplayComments, setReadyToDisplayComments] = React.useState(
     Boolean(reactionsById) || !ENABLE_COMMENT_REACTIONS
   );
+
+  const myChannelForUri =
+    claimIsMine && myChannels && myChannels.length
+      ? myChannels.find(channel => channel.name === activeChannel)
+      : undefined;
+  const channelIdForUri = myChannelForUri && myChannelForUri.claim_id;
+  const channelNameForUri = myChannelForUri && myChannelForUri.name;
+
   const linkedCommentId = linkedComment && linkedComment.comment_id;
   const hasNoComments = !totalComments;
   const moreBelow = totalComments - end > 0;
@@ -123,6 +136,94 @@ function CommentList(props: Props) {
 
     return () => window.removeEventListener('scroll', handleCommentScroll);
   }, [moreBelow, handleMoreBelow, spinnerRef, isFetchingComments, readyToDisplayComments]);
+
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+
+  function toHex(str) {
+    var result = '';
+    for (var i = 0; i < str.length; i++) {
+      result += str.charCodeAt(i).toString(16);
+    }
+    return result;
+  }
+
+  React.useEffect(() => {
+    if (claimIsMine && channelIdForUri && channelNameForUri) {
+      Lbry.channel_sign({ channel_id: channelIdForUri, hexdata: toHex(channelNameForUri) })
+        .then(res => {
+          console.log('res', res);
+          if (res.signature) {
+            setSigData({ ...res });
+          }
+        })
+        .catch(console.error);
+    }
+  }, [claimIsMine, channelIdForUri, channelNameForUri]);
+
+  function handleNewBlock(author, authorChannelId) {
+    const COMMENTRON_API = 'https://comments.lbry.com/api/v2';
+    // const COMMENTRON_API = 'http://f57a05b4de48.ngrok.io/api/v2';
+
+    const options = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'moderation.Block',
+        params: {
+          mod_channel_id: channelIdForUri,
+          mod_channel_name: channelNameForUri,
+          signature: sigData.signature,
+          signing_ts: sigData.signing_ts,
+          banned_channel_id: authorChannelId,
+          banned_channel_name: author,
+        },
+        id: uuid(),
+      }),
+    };
+
+    return fetch(COMMENTRON_API, options)
+      .then(res => res.json())
+      .then(response => {
+        console.log('response', response);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }
+
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
+  //
 
   function prepareComments(arrayOfComments, linkedComment, isFetchingComments) {
     let orderedComments = [];
@@ -227,6 +328,7 @@ function CommentList(props: Props) {
                     uri={uri}
                     authorUri={comment.channel_url}
                     author={comment.channel_name}
+                    authorChannelId={comment.channel_id}
                     claimId={comment.claim_id}
                     commentId={comment.comment_id}
                     message={comment.comment}
@@ -235,6 +337,8 @@ function CommentList(props: Props) {
                     commentIsMine={comment.channel_id && isMyComment(comment.channel_id)}
                     linkedComment={linkedComment}
                     isPinned={comment.is_pinned}
+                    sigData={sigData}
+                    handleNewBlock={handleNewBlock}
                   />
                 );
               })}
