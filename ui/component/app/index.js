@@ -16,6 +16,7 @@ import { selectIsUpgradeAvailable, selectAutoUpdateDownloaded, selectModal } fro
 import { doGetWalletSyncPreference, doSetLanguage } from 'redux/actions/settings';
 import { doSyncLoop } from 'redux/actions/sync';
 import { doDownloadUpgradeRequested, doSignIn, doGetAndPopulatePreferences } from 'redux/actions/app';
+import { selectCommentChannel } from 'redux/selectors/comments';
 import App from './view';
 
 const select = state => ({
@@ -33,6 +34,7 @@ const select = state => ({
   isAuthenticated: selectUserVerifiedEmail(state),
   currentModal: selectModal(state),
   syncFatalError: selectSyncFatalError(state),
+  activeChannel: selectCommentChannel(state),
 });
 
 const perform = dispatch => ({
