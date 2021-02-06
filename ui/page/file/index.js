@@ -8,6 +8,8 @@ import {
   makeSelectClaimIsNsfw,
   SETTINGS,
   makeSelectTagInClaimOrChannelForUri,
+  makeSelectCollectionForId,
+  COLLECTIONS_CONSTS,
 } from 'lbry-redux';
 import { makeSelectCostInfoForUri, doFetchCostInfoForUri } from 'lbryinc';
 import { selectShowMatureContent, makeSelectClientSetting } from 'redux/selectors/settings';
@@ -21,6 +23,7 @@ const select = (state, props) => {
   const { search } = props.location;
   const urlParams = new URLSearchParams(search);
   const linkedCommentId = urlParams.get('lc');
+  const collectionId = urlParams.get(COLLECTIONS_CONSTS.COLLECTION_ID);
 
   return {
     linkedComment: makeSelectCommentForCommentId(linkedCommentId)(state),
@@ -32,14 +35,16 @@ const select = (state, props) => {
     renderMode: makeSelectFileRenderModeForUri(props.uri)(state),
     videoTheaterMode: makeSelectClientSetting(SETTINGS.VIDEO_THEATER_MODE)(state),
     commentsDisabled: makeSelectTagInClaimOrChannelForUri(props.uri, DISABLE_COMMENTS_TAG)(state),
+    collection: makeSelectCollectionForId(collectionId)(state),
+    collectionId,
   };
 };
 
-const perform = dispatch => ({
-  fetchFileInfo: uri => dispatch(doFetchFileInfo(uri)),
-  fetchCostInfo: uri => dispatch(doFetchCostInfoForUri(uri)),
-  setViewed: uri => dispatch(doSetContentHistoryItem(uri)),
-  setPrimaryUri: uri => dispatch(doSetPrimaryUri(uri)),
+const perform = (dispatch) => ({
+  fetchFileInfo: (uri) => dispatch(doFetchFileInfo(uri)),
+  fetchCostInfo: (uri) => dispatch(doFetchCostInfoForUri(uri)),
+  setViewed: (uri) => dispatch(doSetContentHistoryItem(uri)),
+  setPrimaryUri: (uri) => dispatch(doSetPrimaryUri(uri)),
 });
 
 export default withRouter(connect(select, perform)(FilePage));

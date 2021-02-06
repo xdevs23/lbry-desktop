@@ -10,6 +10,7 @@ import {
   makeSelectReflectingClaimForUri,
   makeSelectClaimWasPurchased,
   makeSelectStreamingUrlForUri,
+  doCollectionEdit,
 } from 'lbry-redux';
 import { selectMutedChannels, makeSelectChannelIsMuted } from 'redux/selectors/blocked';
 import { selectBlackListedOutpoints, selectFilteredOutpoints } from 'lbryinc';
@@ -43,6 +44,7 @@ const select = (state, props) => ({
 const perform = (dispatch) => ({
   resolveUri: (uri) => dispatch(doResolveUri(uri)),
   getFile: (uri) => dispatch(doFileGet(uri, false)),
+  editCollection: (id, params) => dispatch(doCollectionEdit(id, params)),
 });
 
 export default connect(select, perform)(ClaimPreview);

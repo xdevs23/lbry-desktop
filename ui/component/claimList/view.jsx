@@ -38,6 +38,7 @@ type Props = {
   renderActions?: (Claim) => ?Node,
   searchInLanguage: boolean,
   hideMenu?: boolean,
+  collectionId?: string,
 };
 
 export default function ClaimList(props: Props) {
@@ -63,6 +64,7 @@ export default function ClaimList(props: Props) {
     renderActions,
     searchInLanguage,
     hideMenu,
+    collectionId,
   } = props;
 
   const [currentSort, setCurrentSort] = usePersistedState(persistedStorageKey, SORT_NEW);
@@ -101,7 +103,15 @@ export default function ClaimList(props: Props) {
   return tileLayout && !header ? (
     <section className="claim-grid">
       {urisLength > 0 &&
-        uris.map((uri) => <ClaimPreviewTile key={uri} uri={uri} showHiddenByUser={showHiddenByUser} />)}
+        uris.map((uri, index) => (
+          <ClaimPreviewTile
+            key={uri}
+            uri={uri}
+            showHiddenByUser={showHiddenByUser}
+            collectionId={collectionId}
+            collectionIndex={index}
+          />
+        ))}
       {!timedOut && urisLength === 0 && !loading && <div className="empty main--empty">{empty || noResultMsg}</div>}
       {timedOut && timedOutMessage && <div className="empty main--empty">{timedOutMessage}</div>}
     </section>
@@ -149,6 +159,7 @@ export default function ClaimList(props: Props) {
               {injectedItem && index === 4 && <li>{injectedItem}</li>}
               <ClaimPreview
                 uri={uri}
+                // this doesn't belong here
                 type={type}
                 hideMenu={hideMenu}
                 includeSupportAction={includeSupportAction}
@@ -157,6 +168,8 @@ export default function ClaimList(props: Props) {
                 renderActions={renderActions}
                 showUserBlocked={showHiddenByUser}
                 showHiddenByUser={showHiddenByUser}
+                collectionId={collectionId}
+                collectionIndex={index}
                 customShouldHide={(claim: StreamClaim) => {
                   // Hack to hide spee.ch thumbnail publishes
                   // If it meets these requirements, it was probably uploaded here:
