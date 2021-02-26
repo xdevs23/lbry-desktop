@@ -17,6 +17,8 @@ import startSandbox from './startSandbox';
 import installDevtools from './installDevtools';
 import fs from 'fs';
 import path from 'path';
+import parser from 'fast-xml-parser';
+
 const filePath = path.join(process.resourcesPath, 'static', 'upgradeDisabled');
 let upgradeDisabled;
 try {
@@ -102,7 +104,7 @@ const startLbryFirst = async () => {
 
   try {
     lbryFirst = new LbryFirstInstance();
-    lbryFirst.on('exit', e => {
+    lbryFirst.on('exit', (e) => {
       if (!isDev) {
         lbryFirst = null;
         isLbryFirstRunning = false;
@@ -158,9 +160,7 @@ if (!gotSingleInstanceLock) {
         //     an anchor and converts it to lbry://channel/#claimid. We remove the slash here as well.
         //   - ? also interpreted as an anchor, remove slash also.
         if (process.platform === 'win32') {
-          URI = URI.replace(/\/$/, '')
-            .replace('/#', '#')
-            .replace('/?', '?');
+          URI = URI.replace(/\/$/, '').replace('/#', '#').replace('/?', '?');
         }
 
         rendererWindow.webContents.send('open-uri-requested', URI);
@@ -205,7 +205,7 @@ app.on('activate', () => {
   }
 });
 
-app.on('will-quit', event => {
+app.on('will-quit', (event) => {
   if (
     process.platform === 'win32' &&
     autoUpdateDownloaded &&
@@ -299,8 +299,8 @@ ipcMain.on('version-info-requested', () => {
 
   const localVersion = pjson.version;
   let result = '';
-  const onSuccess = res => {
-    res.on('data', data => {
+  const onSuccess = (res) => {
+    res.on('data', (data) => {
       result += data;
     });
 
@@ -341,7 +341,7 @@ ipcMain.on('version-info-requested', () => {
         path: '/repos/lbryio/lbry-desktop/releases/latest',
         headers: { 'user-agent': `LBRY/${localVersion}` },
       },
-      res => {
+      (res) => {
         if (res.statusCode === 301 || res.statusCode === 302) {
           requestLatestRelease(res.headers.location, true);
         } else {
@@ -351,7 +351,7 @@ ipcMain.on('version-info-requested', () => {
     );
 
     if (alreadyRedirected) return;
-    req.on('error', err => {
+    req.on('error', (err) => {
       console.log('Failed to get current version from GitHub. Error:', err);
       if (rendererWindow) {
         rendererWindow.webContents.send('version-info-received', null);
@@ -376,7 +376,32 @@ ipcMain.on('launch-lbry-first', async () => {
   }
 });
 
-process.on('uncaughtException', error => {
+ipcMain.on('check-yt', (event, arg) => {
+  const { channel, lastVideoID } = JSON.parse(arg);
+  const baseURL = 'https://www.youtube.com/feeds/videos.xml?channel_id=';
+
+  fetch(baseURL + channel)
+    .then((res) => res.text())
+    .then((text) => {
+      const xml = parser.parse(text);
+      const latestVideo = xml.feed.entry[0];
+      const hasNewVideo = lastVideoID !== latestVideo['yt:videoId'];
+
+      let replyData = { channel_id: channel };
+      if (hasNewVideo) {
+        replyData.video_id = latestVideo['yt:videoId'];
+        replyData.published_at = latestVideo.published;
+      }
+
+      console.log('reply', replyData);
+      event.reply('check-yt-response', JSON.stringify(replyData));
+    })
+    .catch((error) => {
+      console.log('Error fetching youtube', error);
+    });
+});
+
+process.on('uncaughtException', (error) => {
   console.log(error);
   dialog.showErrorBox('Error Encountered', `Caught error: ${error}`);
   appState.isQuitting = true;

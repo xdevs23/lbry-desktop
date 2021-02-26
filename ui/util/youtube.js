@@ -9,22 +9,33 @@ export function ytsync() {
     .then((data) => {
       const channel = data.channel_id;
       const lastVideoID = data.last_video_id;
-
-      fetch(baseURL + channel).then((res) => {
-        const xml = parser.parse(res.text());
-
-        const latestVideo = xml.feed.entry[0];
-        if (lastVideoID !== latestVideo['yt:videoId']) {
-          console.log(channel + ': new video', lastVideoID, latestVideo['yt:videoId']);
-          Lbryio.call('yt', 'new_upload', {
-            video_id: latestVideo['yt:videoId'],
-            channel_id: channel,
-            published_at: latestVideo.published,
-          });
-        } else {
-          console.log(channel + ': no new videos', lastVideoID, latestVideo);
-        }
-      });
+      fetch(baseURL + channel, {
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'text/plain',
+        },
+      })
+        .then((res) => {
+          console.log('res', res);
+          return res;
+        })
+        .then((res) => res.text())
+        .then((text) => {
+          console.log('test', text);
+          const xml = parser.parse(text);
+          console.log('xml', xml);
+          const latestVideo = xml.feed.entry[0];
+          if (lastVideoID !== latestVideo['yt:videoId']) {
+            console.log(channel + ': new video', lastVideoID, latestVideo['yt:videoId']);
+            Lbryio.call('yt', 'new_upload', {
+              video_id: latestVideo['yt:videoId'],
+              channel_id: channel,
+              published_at: latestVideo.published,
+            });
+          } else {
+            console.log(channel + ': no new videos', lastVideoID, latestVideo);
+          }
+        });
     })
     .catch((err) => {
       console.log(err);

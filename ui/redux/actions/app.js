@@ -54,7 +54,7 @@ import { doSyncLoop, doSetPrefsReady } from 'redux/actions/sync';
 import { doAuthenticate } from 'redux/actions/user';
 import { lbrySettings as config, version as appVersion } from 'package.json';
 import analytics, { SHARE_INTERNAL } from 'analytics';
-import { doSignOutCleanup } from 'util/saved-passwords';
+import { doSignOutCleanup, getAuthToken } from 'util/saved-passwords';
 import { ytsync } from 'util/youtube';
 import { doSocketConnect } from 'redux/actions/websocket';
 import { stringifyServerParam, shouldSetSetting } from 'util/sync-settings';
@@ -543,17 +543,39 @@ export function doSignIn() {
     const state = getState();
     const user = selectUser(state);
     const notificationsEnabled = user.experimental_ui;
+    const authToken = getAuthToken();
 
     if (notificationsEnabled) {
       dispatch(doSocketConnect());
       dispatch(doNotificationList());
     }
 
-    ytsync();
+    // ytsync();
 
     // @if TARGET='web'
     dispatch(doBalanceSubscribe());
     dispatch(doFetchChannelListMine());
+    // @endif
+
+    // @if TARGET='app'
+
+    function checkYtSync() {
+      Lbryio.call('yt', 'next_channel', undefined).then((data) => {
+        const channel = data.channel_id;
+        const lastVideoID = data.last_video_id;
+
+        ipcRenderer.send('check-yt', JSON.stringify({ channel, lastVideoID }));
+      });
+    }
+
+    checkYtSync();
+    setInterval(checkYtSync, 1000 * 10);
+
+    ipcRenderer.on('check-yt-response', (event, arg) => {
+      const data = JSON.parse(arg);
+      console.log('data', data);
+      Lbryio.call('yt', 'new_upload', data, 'post');
+    });
     // @endif
   };
 }
