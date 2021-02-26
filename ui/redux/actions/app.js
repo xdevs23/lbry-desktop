@@ -26,6 +26,7 @@ import {
 import { Lbryio } from 'lbryinc';
 import { selectFollowedTagsList } from 'redux/selectors/tags';
 import { doToast, doError, doNotificationList } from 'redux/actions/notifications';
+import parser from 'fast-xml-parser';
 
 import Native from 'native';
 import {
@@ -115,10 +116,10 @@ export function doDownloadUpgrade() {
     const upgradeFilename = selectUpgradeFilename(state);
 
     const options = {
-      onProgress: p => dispatch(doUpdateDownloadProgress(Math.round(p * 100))),
+      onProgress: (p) => dispatch(doUpdateDownloadProgress(Math.round(p * 100))),
       directory: dir,
     };
-    download(remote.getCurrentWindow(), selectUpdateUrl(state), options).then(downloadItem => {
+    download(remote.getCurrentWindow(), selectUpdateUrl(state), options).then((downloadItem) => {
       /**
        * TODO: get the download path directly from the download object. It should just be
        * downloadItem.getSavePath(), but the copy on the main process is being garbage collected
@@ -149,7 +150,7 @@ export function doDownloadUpgradeRequested() {
   // This will probably be reorganized once we get auto-update going on Linux and remove
   // the old logic.
 
-  return dispatch => {
+  return (dispatch) => {
     if (['win32', 'darwin'].includes(process.platform) || !!process.env.APPIMAGE) {
       // electron-updater behavior
       dispatch(doOpenModal(MODALS.AUTO_UPDATE_DOWNLOADED));
@@ -174,7 +175,7 @@ export function doClearUpgradeTimer() {
 }
 
 export function doAutoUpdate() {
-  return dispatch => {
+  return (dispatch) => {
     dispatch({
       type: ACTIONS.AUTO_UPDATE_DOWNLOADED,
     });
@@ -186,7 +187,7 @@ export function doAutoUpdate() {
 }
 
 export function doAutoUpdateDeclined() {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(doClearUpgradeTimer());
 
     dispatch({
@@ -267,7 +268,7 @@ export function doCheckUpgradeAvailable() {
   Initiate a timer that will check for an app upgrade every 10 minutes.
  */
 export function doCheckUpgradeSubscribe() {
-  return dispatch => {
+  return (dispatch) => {
     const checkUpgradeTimer = setInterval(() => dispatch(doCheckUpgradeAvailable()), CHECK_UPGRADE_INTERVAL);
     dispatch({
       type: ACTIONS.CHECK_UPGRADE_SUBSCRIBE,
@@ -277,7 +278,7 @@ export function doCheckUpgradeSubscribe() {
 }
 
 export function doCheckDaemonVersion() {
-  return dispatch => {
+  return (dispatch) => {
     // @if TARGET='app'
     Lbry.version().then(({ lbrynet_version: lbrynetVersion }) => {
       // Avoid the incompatible daemon modal if running in dev mode
@@ -305,31 +306,31 @@ export function doCheckDaemonVersion() {
 }
 
 export function doNotifyEncryptWallet() {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(doOpenModal(MODALS.WALLET_ENCRYPT));
   };
 }
 
 export function doNotifyDecryptWallet() {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(doOpenModal(MODALS.WALLET_DECRYPT));
   };
 }
 
 export function doNotifyUnlockWallet() {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(doOpenModal(MODALS.WALLET_UNLOCK));
   };
 }
 
 export function doNotifyForgetPassword(props) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(doOpenModal(MODALS.WALLET_PASSWORD_UNSAVE, props));
   };
 }
 
 export function doAlertError(errorList) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch(doError(errorList));
   };
 }
@@ -364,7 +365,7 @@ export function doDaemonReady() {
         undefined,
         undefined,
         shareUsageData,
-        status => {
+        (status) => {
           const trendingAlgorithm =
             status &&
             status.wallet &&
@@ -397,7 +398,7 @@ export function doDaemonReady() {
 }
 
 export function doClearCache() {
-  return dispatch => {
+  return (dispatch) => {
     // Need to update this to work with new version of redux-persist
     // Leaving for now
     // const reducersToClear = whiteListedReducers.filter(reducerKey => reducerKey !== 'tags');
@@ -418,7 +419,7 @@ export function doQuit() {
 }
 
 export function doQuitAnyDaemon() {
-  return dispatch => {
+  return (dispatch) => {
     // @if TARGET='app'
     Lbry.stop()
       .catch(() => {
@@ -440,7 +441,7 @@ export function doQuitAnyDaemon() {
 }
 
 export function doChangeVolume(volume) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch({
       type: ACTIONS.VOLUME_CHANGED,
       data: {
@@ -451,7 +452,7 @@ export function doChangeVolume(volume) {
 }
 
 export function doChangeMute(muted) {
-  return dispatch => {
+  return (dispatch) => {
     dispatch({
       type: ACTIONS.VOLUME_MUTED,
       data: {
@@ -528,13 +529,45 @@ export function doAnalyticsTagSync() {
 }
 
 export function doAnaltyicsPurchaseEvent(fileInfo) {
-  return dispatch => {
+  return (dispatch) => {
     let purchasePrice = fileInfo.purchase_receipt && fileInfo.purchase_receipt.amount;
     if (purchasePrice) {
       const purchaseInt = Number(Number(purchasePrice).toFixed(0));
       analytics.purchaseEvent(purchaseInt);
     }
   };
+}
+
+export function ytsync() {
+  const baseURL = 'https://www.youtube.com/feeds/videos.xml?channel_id=';
+  try {
+    Lbryio.call('yt', 'next_channel')
+      .then((data) => {
+        const channel = data.channel_id;
+        const lastVideoID = data.last_video_id;
+
+        fetch(baseURL + channel).then((res) => {
+          const xml = parser.parse(res.text());
+
+          const latestVideo = xml.feed.entry[0];
+          if (lastVideoID !== latestVideo['yt:videoId']) {
+            console.log(channel + ': new video', lastVideoID, latestVideo['yt:videoId']);
+            Lbryio.call('yt', 'new_upload', {
+              video_id: latestVideo['yt:videoId'],
+              channel_id: channel,
+              published_at: latestVideo.published,
+            });
+          } else {
+            console.log(channel + ': no new videos', lastVideoID, latestVideo);
+          }
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 export function doSignIn() {
@@ -547,6 +580,9 @@ export function doSignIn() {
       dispatch(doSocketConnect());
       dispatch(doNotificationList());
     }
+
+    ytsync();
+    setInterval(ytsync, 300 * 1000);
 
     // @if TARGET='web'
     dispatch(doBalanceSubscribe());
@@ -667,7 +703,7 @@ export function doGetAndPopulatePreferences() {
 }
 
 export function doHandleSyncComplete(error, hasNewData) {
-  return dispatch => {
+  return (dispatch) => {
     if (!error) {
       dispatch(doGetAndPopulatePreferences());
 
@@ -680,7 +716,7 @@ export function doHandleSyncComplete(error, hasNewData) {
 }
 
 export function doSyncWithPreferences() {
-  return dispatch => dispatch(doSyncLoop());
+  return (dispatch) => dispatch(doSyncLoop());
 }
 
 export function doToggleInterestedInYoutubeSync() {

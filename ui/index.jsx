@@ -73,7 +73,7 @@ Lbry.setDaemonConnectionString(proxyURL);
 
 Lbry.setOverride(
   'publish',
-  params =>
+  (params) =>
     new Promise((resolve, reject) => {
       apiPublishCallViaWeb(
         apiCall,
@@ -117,7 +117,7 @@ doAuthTokenRefresh();
 // We keep a local variable for authToken because `ipcRenderer.send` does not
 // contain a response, so there is no way to know when it's been set
 let authToken;
-Lbryio.setOverride('setAuthToken', authToken => {
+Lbryio.setOverride('setAuthToken', (authToken) => {
   setAuthToken(authToken);
   return authToken;
 });
@@ -125,7 +125,7 @@ Lbryio.setOverride('setAuthToken', authToken => {
 Lbryio.setOverride(
   'getAuthToken',
   () =>
-    new Promise(resolve => {
+    new Promise((resolve) => {
       const authTokenToReturn = authToken || getAuthToken();
       resolve(authTokenToReturn);
     })
@@ -135,7 +135,7 @@ rewards.setCallback('claimFirstRewardSuccess', () => {
   app.store.dispatch(doOpenModal(MODALS.FIRST_REWARD));
 });
 
-rewards.setCallback('claimRewardSuccess', reward => {
+rewards.setCallback('claimRewardSuccess', (reward) => {
   if (reward && reward.type === rewards.TYPE_REWARD_CODE) {
     app.store.dispatch(doHideModal());
   }
@@ -195,11 +195,11 @@ ipcRenderer.on('devtools-is-opened', () => {
 
 // Force exit mode for html5 fullscreen api
 // See: https://github.com/electron/electron/issues/18188
-remote.getCurrentWindow().on('leave-full-screen', event => {
+remote.getCurrentWindow().on('leave-full-screen', (event) => {
   document.webkitExitFullscreen();
 });
 
-document.addEventListener('click', event => {
+document.addEventListener('click', (event) => {
   let { target } = event;
 
   while (target && target !== document) {
@@ -213,10 +213,10 @@ document.addEventListener('click', event => {
 });
 // @endif
 
-document.addEventListener('dragover', event => {
+document.addEventListener('dragover', (event) => {
   event.preventDefault();
 });
-document.addEventListener('drop', event => {
+document.addEventListener('drop', (event) => {
   event.preventDefault();
 });
 
@@ -229,7 +229,7 @@ function AppWrapper() {
     // @if TARGET='app'
     moment.locale(remote.app.getLocale());
 
-    autoUpdater.on('error', error => {
+    autoUpdater.on('error', (error) => {
       console.error(error.message); // eslint-disable-line no-console
     });
 
