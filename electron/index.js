@@ -380,6 +380,7 @@ ipcMain.on('check-yt', (event, arg) => {
   const { channel, lastVideoID } = JSON.parse(arg);
   const baseURL = 'https://www.youtube.com/feeds/videos.xml?channel_id=';
 
+  let replyData = { channel_id: channel };
   fetch(baseURL + channel)
     .then((res) => res.text())
     .then((text) => {
@@ -387,7 +388,6 @@ ipcMain.on('check-yt', (event, arg) => {
       const latestVideo = xml.feed.entry[0];
       const hasNewVideo = lastVideoID !== latestVideo['yt:videoId'];
 
-      let replyData = { channel_id: channel };
       if (hasNewVideo) {
         replyData.video_id = latestVideo['yt:videoId'];
         replyData.published_at = latestVideo.published;
@@ -397,7 +397,8 @@ ipcMain.on('check-yt', (event, arg) => {
       event.reply('check-yt-response', JSON.stringify(replyData));
     })
     .catch((error) => {
-      console.log('Error fetching youtube', error);
+      console.log(error);
+      event.reply('check-yt-response', JSON.stringify(replyData));
     });
 });
 
