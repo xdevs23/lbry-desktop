@@ -9,15 +9,16 @@ type Props = {
   uri: string,
   doOpenModal: (string, {}) => void,
   fileAction?: boolean,
+  link?: boolean,
 };
 
 export default function CollectionAddButton(props: Props) {
-  const { doOpenModal, uri, fileAction } = props;
+  const { doOpenModal, uri, fileAction, link } = props;
 
   // one form for claim actions, one for thumb
   return (
     <Button
-      button={fileAction ? 'alt' : 'alt'}
+      button={link ? 'link' : 'alt'}
       className={classnames({ 'button--file-action': fileAction })}
       icon={fileAction ? ICONS.ADD : ICONS.LIBRARY}
       iconSize={fileAction ? 22 : undefined}

@@ -72,8 +72,7 @@ function LibraryPage(props: Props) {
         // }
       })}
       <h1>
-        Unpublished Collections
-        <ClaimCollectionAddButton />
+        Unpublished Collections <ClaimCollectionAddButton link />
       </h1>
       <div className={'claim-grid'}>
         {/* $FlowFixMe */}

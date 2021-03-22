@@ -21,7 +21,6 @@ type Props = {
   collectionName: string,
   editedCollection?: Collection,
   pendingCollection?: Collection,
-  newButton?: Node,
   claim: ?Claim,
   channelClaim: ?ChannelClaim,
   collectionItemUrls: Array<string>,
@@ -58,7 +57,6 @@ function CollectionPreviewTile(props: Props) {
     // thumbnail,
     title,
     claim,
-    newButton,
     // channelClaim,
     collectionItemUrls,
     blackListedOutpoints,
@@ -81,21 +79,6 @@ function CollectionPreviewTile(props: Props) {
     }
   }, [collectionId, hasClaim]);
 
-  // delete this.
-  if (newButton) {
-    return (
-      <li className={classnames('claim-preview--tile', {})}>
-        <div className="placeholder media__thumb">{newButton}</div>
-        <div className="placeholder__wrapper">
-          <div className="placeholder claim-tile__title" />
-          <div className="placeholder claim-tile__info" />
-        </div>
-      </li>
-    );
-  }
-  // const permanentUrl = claim && claim.permanent_url; // until sdk resolvefix
-  const canonicalUrl = claim && claim.canonical_url;
-  console.log('canonical', canonicalUrl);
   // const channelUrl = channelClaim && channelClaim.permanent_url;
   const firstCollectionUrl = collectionItemUrls[0];
   let navigateUrl = firstCollectionUrl && formatLbryUrlForWeb(firstCollectionUrl);
@@ -203,6 +186,14 @@ function CollectionPreviewTile(props: Props) {
               history.push(`/$/${PAGES.COLLECTION}/${collectionId}`);
             }}
           />
+          <Button
+            icon={ICONS.REMOVE}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              deleteCollection(collectionId);
+            }}
+          />
         </h2>
         <h2 className="claim-tile__title">{`${collectionItemUrls.length} Items`}</h2>
         {pendingCollection && <h2 className="claim-tile__title">Pending</h2>}
@@ -225,7 +216,6 @@ function CollectionPreviewTile(props: Props) {
                   <UriIndicator uri={uri} link />
                   <DateTime timeAgo uri={uri} />
                 </div>
-                <Button icon={ICONS.REMOVE} onClick={() => deleteCollection(collectionId)} />
               </React.Fragment>
             )}
           </div>

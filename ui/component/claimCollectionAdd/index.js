@@ -4,7 +4,6 @@ import { withRouter } from 'react-router';
 import {
   makeSelectClaimForUri,
   doLocalCollectionCreate,
-  doCollectionEdit,
   selectBuiltinCollections,
   selectMyPublishedCollections,
   selectMyUnpublishedCollections,
@@ -19,7 +18,6 @@ const select = (state, props) => ({
 
 const perform = (dispatch) => ({
   addCollection: (name) => dispatch(doLocalCollectionCreate(name)),
-  editCollection: (id, params) => dispatch(doCollectionEdit(id, params)),
 });
 
 export default withRouter(connect(select, perform)(ClaimCollectionAdd));
