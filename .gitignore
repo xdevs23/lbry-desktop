@@ -23,7 +23,6 @@ package-lock.json
 /web/.env.defaults
 /custom/*
 /custom/homepages/*
-/custom/content/*
 !/custom/content/default.json
 !/custom/content/test.json
 !/custom/homepages/.gitkeep
