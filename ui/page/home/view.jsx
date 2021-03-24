@@ -79,9 +79,11 @@ function HomePage(props: Props) {
           </p>
         </div>
       )}
+      {SIMPLE_SITE && <h1 className="home__meme">{__(`Video stonks.`)}</h1>}
+
       {rowData.map(({ title, route, link, icon, help, options = {} }, index) => (
         <div key={title} className="claim-grid__wrapper">
-          {title && (
+          {index !== 0 && title && typeof title === 'string' && (
             <h1 className="claim-grid__header">
               <Button navigate={route || link} button="link">
                 {icon && <Icon className="claim-grid__header-icon" sectionIcon icon={icon} size={20} />}
@@ -91,8 +93,8 @@ function HomePage(props: Props) {
             </h1>
           )}
 
-          <ClaimTilesDiscover {...options} />
-          {link && (
+          <ClaimTilesDiscover {...options} pin={SIMPLE_SITE && route === `/$/${PAGES.GENERAL}`} />
+          {(route || link) && (
             <Button
               className="claim-grid__title--secondary"
               button="link"
