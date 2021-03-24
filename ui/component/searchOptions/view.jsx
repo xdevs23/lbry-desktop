@@ -220,7 +220,7 @@ const SearchOptions = (props: Props) => {
         <table className="table table--condensed">
           <tbody>
             {addRow(__('Type'), typeElem)}
-            {addRow(__('Upload Date'), uploadDateElem)}
+            {false && addRow(__('Upload Date'), uploadDateElem)}
             {addRow(__('Sort By'), sortByElem)}
             {addRow(__('Other Options'), otherOptionsElem)}
           </tbody>
