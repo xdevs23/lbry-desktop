@@ -26,3 +26,5 @@ export const SEARCH_OPTIONS = {
   SORT_DESCENDING: 'release_time',
   EXACT: 'exact',
 };
+
+export const SEARCH_PAGE_SIZE = 20;

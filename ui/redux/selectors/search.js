@@ -12,6 +12,7 @@ import {
   makeSelectIsUriResolving,
 } from 'lbry-redux';
 import { createSelector } from 'reselect';
+import { createNormalizedSearchKey } from 'util/search';
 
 type State = { search: SearchState };
 
@@ -31,12 +32,31 @@ export const selectSearchUrisByQuery: (state: State) => { [string]: Array<string
   (state) => state.urisByQuery
 );
 
+export const selectIsSearchQueryMaxed: (state: State) => { [boolean]: Array<boolean> } = createSelector(
+  selectState,
+  (state) => state.isQueryMaxed
+);
+
 export const makeSelectSearchUris = (query: string): ((state: State) => Array<string>) =>
   // replace statement below is kind of ugly, and repeated in doSearch action
-  createSelector(
-    selectSearchUrisByQuery,
-    (byQuery) => byQuery[query ? query.replace(/^lbry:\/\//i, '').replace(/\//, ' ') : query]
-  );
+  createSelector(selectSearchUrisByQuery, (byQuery) => {
+    if (query) {
+      query = query.replace(/^lbry:\/\//i, '').replace(/\//, ' ');
+      const normalizedQuery = createNormalizedSearchKey(query);
+      return byQuery[normalizedQuery];
+    }
+    return byQuery[query];
+  });
+
+export const makeSelectIsSearchQueryMaxed = (query: string): ((state: State) => boolean) =>
+  createSelector(selectIsSearchQueryMaxed, (isQueryMaxed) => {
+    if (query) {
+      query = query.replace(/^lbry:\/\//i, '').replace(/\//, ' ');
+      const normalizedQuery = createNormalizedSearchKey(query);
+      return isQueryMaxed[normalizedQuery];
+    }
+    return isQueryMaxed[query];
+  });
 
 // Creates a query string based on the state in the search reducer
 // Can be overrided by passing in custom sizes/from values for other areas pagination

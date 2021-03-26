@@ -7,6 +7,7 @@ import {
   makeSelectSearchUris,
   makeSelectQueryWithOptions,
   selectSearchOptions,
+  makeSelectIsSearchQueryMaxed,
 } from 'redux/selectors/search';
 import { makeSelectClientSetting } from 'redux/selectors/settings';
 import { selectUserVerifiedEmail } from 'redux/selectors/user';
@@ -26,6 +27,7 @@ const select = (state, props) => {
     showMature === false ? { nsfw: false, isBackgroundSearch: false } : { isBackgroundSearch: false }
   )(state);
   const uris = makeSelectSearchUris(query)(state);
+  const isQueryMaxed = makeSelectIsSearchQueryMaxed(query)(state);
 
   return {
     isSearching: selectIsSearching(state),
@@ -33,12 +35,13 @@ const select = (state, props) => {
     uris: uris,
     isAuthenticated: selectUserVerifiedEmail(state),
     searchOptions: selectSearchOptions(state),
+    isQueryMaxed: isQueryMaxed,
   };
 };
 
-const perform = dispatch => ({
+const perform = (dispatch) => ({
   search: (query, options) => dispatch(doSearch(query, options)),
-  onFeedbackPositive: query => {
+  onFeedbackPositive: (query) => {
     analytics.apiSearchFeedback(query, 1);
     dispatch(
       doToast({
@@ -46,7 +49,7 @@ const perform = dispatch => ({
       })
     );
   },
-  onFeedbackNegative: query => {
+  onFeedbackNegative: (query) => {
     analytics.apiSearchFeedback(query, 0);
     dispatch(
       doToast({
