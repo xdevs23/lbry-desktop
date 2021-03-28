@@ -4,6 +4,7 @@ import React from 'react';
 import Page from 'component/page';
 import LivestreamLayout from 'component/livestreamLayout';
 import analytics from 'analytics';
+import { Lbry } from 'lbry-redux';
 
 type Props = {
   uri: string,
@@ -19,8 +20,28 @@ export default function LivestreamPage(props: Props) {
   const [activeViewers, setActiveViewers] = React.useState(0);
   const [isLive, setIsLive] = React.useState(false);
   const livestreamChannelId = channelClaim && channelClaim.signing_channel && channelClaim.signing_channel.claim_id;
+  const [hasLivestreamClaim, setHasLivestreamClaim] = React.useState(false);
+
+  const TEN_SECONDS_IN_MS = 10000;
 
   React.useEffect(() => {
+    if (livestreamChannelId) {
+      Lbry.claim_search({
+        channel_ids: [livestreamChannelId],
+        has_no_source: true,
+        claim_type: ['stream'],
+      })
+        .then((res) => {
+          if (res && res.items && res.items.length > 0) {
+            setHasLivestreamClaim(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [livestreamChannelId]);
+
+  React.useEffect(() => {
+    let interval;
     function checkIsLive() {
       // $FlowFixMe Bitwave's API can handle garbage
       fetch(`${BITWAVE_API}/${livestreamChannelId}`)
@@ -38,19 +59,17 @@ export default function LivestreamPage(props: Props) {
           }
         });
     }
-
-    let interval;
-    if (livestreamChannelId) {
+    if (livestreamChannelId && hasLivestreamClaim) {
       if (!interval) checkIsLive();
-      interval = setInterval(checkIsLive, 10 * 1000);
-    }
+      interval = setInterval(checkIsLive, TEN_SECONDS_IN_MS);
 
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [livestreamChannelId]);
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    }
+  }, [livestreamChannelId, hasLivestreamClaim]);
 
   const stringifiedClaim = JSON.stringify(claim);
   React.useEffect(() => {
