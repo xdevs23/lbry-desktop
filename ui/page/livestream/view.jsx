@@ -22,10 +22,13 @@ export default function LivestreamPage(props: Props) {
   const livestreamChannelId = channelClaim && channelClaim.signing_channel && channelClaim.signing_channel.claim_id;
   const [hasLivestreamClaim, setHasLivestreamClaim] = React.useState(false);
 
-  const TEN_SECONDS_IN_MS = 10000;
+  const THIRTY_SECONDS_IN_MS = 10000;
+  const SIXTY_SECONDS_IN_MS = 60000;
 
+  // the component needs to check if the channel has published a new livestream, so we know if it should check
   React.useEffect(() => {
-    if (livestreamChannelId) {
+    let checkClaimsInterval;
+    function checkHasLivestreamClaim() {
       Lbry.claim_search({
         channel_ids: [livestreamChannelId],
         has_no_source: true,
@@ -37,6 +40,16 @@ export default function LivestreamPage(props: Props) {
           }
         })
         .catch(() => {});
+    }
+    if (livestreamChannelId) {
+      if (!checkClaimsInterval) checkHasLivestreamClaim();
+      checkClaimsInterval = setInterval(checkHasLivestreamClaim, SIXTY_SECONDS_IN_MS);
+
+      return () => {
+        if (checkClaimsInterval) {
+          clearInterval(checkClaimsInterval);
+        }
+      };
     }
   }, [livestreamChannelId]);
 
@@ -61,7 +74,7 @@ export default function LivestreamPage(props: Props) {
     }
     if (livestreamChannelId && hasLivestreamClaim) {
       if (!interval) checkIsLive();
-      interval = setInterval(checkIsLive, TEN_SECONDS_IN_MS);
+      interval = setInterval(checkIsLive, THIRTY_SECONDS_IN_MS);
 
       return () => {
         if (interval) {
