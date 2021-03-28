@@ -22,8 +22,8 @@ export default function LivestreamPage(props: Props) {
   const livestreamChannelId = channelClaim && channelClaim.signing_channel && channelClaim.signing_channel.claim_id;
   const [hasLivestreamClaim, setHasLivestreamClaim] = React.useState(false);
 
-  const THIRTY_SECONDS_IN_MS = 10000;
-  const SIXTY_SECONDS_IN_MS = 60000;
+  const STREAMING_POLL_INTERVAL_IN_MS = 10000;
+  const LIVESTREAM_CLAIM_POLL_IN_MS = 60000;
 
   // the component needs to check if the channel has published a new livestream, so we know if it should check
   React.useEffect(() => {
@@ -43,7 +43,7 @@ export default function LivestreamPage(props: Props) {
     }
     if (livestreamChannelId) {
       if (!checkClaimsInterval) checkHasLivestreamClaim();
-      checkClaimsInterval = setInterval(checkHasLivestreamClaim, SIXTY_SECONDS_IN_MS);
+      checkClaimsInterval = setInterval(checkHasLivestreamClaim, LIVESTREAM_CLAIM_POLL_IN_MS);
 
       return () => {
         if (checkClaimsInterval) {
@@ -74,7 +74,7 @@ export default function LivestreamPage(props: Props) {
     }
     if (livestreamChannelId && hasLivestreamClaim) {
       if (!interval) checkIsLive();
-      interval = setInterval(checkIsLive, THIRTY_SECONDS_IN_MS);
+      interval = setInterval(checkIsLive, STREAMING_POLL_INTERVAL_IN_MS);
 
       return () => {
         if (interval) {
