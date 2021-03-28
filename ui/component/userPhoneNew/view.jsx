@@ -6,6 +6,7 @@ import Card from 'component/common/card';
 const os = require('os').type();
 const countryCodes = require('country-data')
   .callingCountries.all.filter(_ => _.emoji)
+  .filter((country) => country.status !== 'deleted')
   .reduce((acc, cur) => acc.concat(cur.countryCallingCodes.map(_ => ({ ...cur, countryCallingCode: _ }))), [])
   .sort((a, b) => {
     if (a.countryCallingCode < b.countryCallingCode) {
