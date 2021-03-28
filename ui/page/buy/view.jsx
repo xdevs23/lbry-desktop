@@ -19,6 +19,7 @@ const COUNTRIES = Array.from(
   new Set(
     countryData.all
       .map((country) => country.name)
+      .filter((country) => country.status !== 'deleted')
       .sort((a, b) => {
         if (a > b) {
           return 1;
