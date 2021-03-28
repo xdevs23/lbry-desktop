@@ -41,7 +41,7 @@ export default function LivestreamPage(props: Props) {
         })
         .catch(() => {});
     }
-    if (livestreamChannelId) {
+    if (livestreamChannelId && !isLive) {
       if (!checkClaimsInterval) checkHasLivestreamClaim();
       checkClaimsInterval = setInterval(checkHasLivestreamClaim, LIVESTREAM_CLAIM_POLL_IN_MS);
 
@@ -51,7 +51,7 @@ export default function LivestreamPage(props: Props) {
         }
       };
     }
-  }, [livestreamChannelId]);
+  }, [livestreamChannelId, isLive]);
 
   React.useEffect(() => {
     let interval;
